@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Library</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    header {
+      background: cornflowerblue;
+      color: #fff;
+      padding: 1em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header nav {
+      display: flex;
+      gap: 1em;
+    }
+
+    input[type="search"] {
+      padding: 0.5em;
+      font-size: 1em;
+    }
+
+    button {
+      background: lightgreen;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      padding:0.2rem;
+    }
+
+    button:hover {
+      background: #005f5f;
+    }
+
+    main {
+      padding: 1em;
+    }
+
+    .filter-section {
+      margin-bottom: 1em;
+    }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1em;
+    }
+
+    .book-card {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 1em;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    aside {
+      position: fixed;
+      top: 0;
+      right: 0;
+      background: #fff;
+      width: 300px;
+      height: 100%;
+      box-shadow: -3px 0 5px rgba(0, 0, 0, 0.2);
+      overflow-y: auto;
+      padding: 1em;
+    }
+
+    aside h2 {
+      margin-top: 0;
+    }
+
+    aside ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    aside ul li {
+      margin: 0.5em 0;
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1 style="color:blueviolet">Book Library Management</h1>
+    <nav>
+      <input type="search" id="searchBar" placeholder="Search books..." oninput="searchBooks()">
+      <button onclick="showReadingList()">📚 Reading List</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="filter-section">
+      <h2 style="color:orangered">Filter by Category</h2>
+      <select id="categoryFilter" onchange="filterBooks()">
+        <option value="All">All</option>
+        <option value="Fiction">Fiction</option>
+        <option value="Non-Fiction">Non-Fiction</option>
+        <option value="Fantasy">Fantasy</option>
+        <option value="Biography">Biography</option>
+        <option value="Classic">Classic</option>
+      </select>
+    </section>
+
+    <section class="book-grid" id="bookGrid">
+      <!-- Book cards will be dynamically inserted here -->
+    </section>
+  </main>
+
+  <aside id="readingList" class="hidden">
+    <h2>My Reading List</h2>
+    <ul id="readingListItems">
+      <!-- Reading list items will appear here -->
+    </ul>
+    <button onclick="closeReadingList()">Close</button>
+  </aside>
+
+  <script>
+    const books = [
+      { id: 1, title: "To Kill a Mockingbird", category: "Fiction", link: "https://en.wikipedia.org/wiki/To_Kill_a_Mockingbird"},
+      { id: 2, title: "The Last Leaf", category: "Classic", link: "https://en.wikipedia.org/wiki/the-last-leaf-by-o-henry-plot-summary/" },
+      { id: 3, title: "Harry Potter", category: "Fantasy", link: "https://en.wikipedia.org/wiki/Harry_Potter" },
+      { id: 4, title: "Steve Jobs", category: "Biography", link: "https://en.wikipedia.org/wiki/Steve-Jobs-summary/" },
+      { id: 5, title: "1984", category: "Non-Fiction", link: "https://en.wikipedia.org/wiki/Nineteen_Eighty-Four" },
+      { id: 6, title: "The Lord of the Rings by J.R.R. Tolkien", category: "fantasy", link:"https://en.wikipedia.org/wiki/The_Hobbit"},
+      { id: 7, title: "Little Women by Louisa May Alcott", category: "Fiction", link:"https://en.wikipedia.org/wiki/Little_Women" },
+      { id: 8, title: "War and Peace by Leo Tolstoy", category: "Classic", link:"https://en.wikipedia.org/wiki/War_and_Peace"},
+      { id: 9, title: "Peter Pan by J.M. Barrie", category: "Fantasy", link:"https://en.wikipedia.org/wiki/Peter_Pan"},
+      { id: 10, title: "Long Walk to Freedom by Nelson Mandela", category: "Biography", link:"https://en.wikipedia.org/wiki/Long_Walk_to_Freedom"},
+      { id: 11, title: "Born a Crime by Trevor Noah", category: "Non-Fiction", link:"https://en.wikipedia.org/wiki/Born_a_Crime" },
+      { id: 12, title: "Ender's Game by Orson Scott Card", category: "Fiction", link:"https://en.wikipedia.org/wiki/Ender%27s_Game" },
+      { id: 13, title: "Great Expectations by Charles Dickens", category: "Classic", link:"https://en.wikipedia.org/wiki/Great_Expectations"},
+      { id: 14, title: "The Once and Future King by T.H. White", category: "Fantasy", link:"https://en.wikipedia.org/wiki/The_Once_and_Future_King" },
+      { id: 15, title: "I Am Malala by Malala Yousafzai", category: "Biography",link:"https://en.wikipedia.org/wiki/I_Am_Malala"},
+      { id: 16, title: "Educated by Tara Westover", category: "Non-Fiction", link:"https://en.wikipedia.org/wiki/Educated_(memoir)" },
+      { id: 17, title: "Dune by Frank Herbert", category: "Fiction", link:"https://en.wikipedia.org/wiki/Dune_(novel)" },
+      { id: 18, title: "The Picture of Dorian Gray by Oscar Wilde", category: "Classic", link:"https://en.wikipedia.org/wiki/The_Picture_of_Dorian_Gray"},
+      { id: 19, title: "The Neverending Story by Michael Ende", category: "fantasy", link:"https://en.wikipedia.org/wiki/The_Neverending_Story" },
+      { id: 20, title: "Open by Andre Agassi", category: "Biography", link:"https://en.wikipedia.org/wiki/Open:_An_Autobiography"},
+      { id: 21, title: "Thinking, Fast and Slow by Daniel Kahneman", category: "Non-Fiction", link:"https://en.wikipedia.org/wiki/Thinking,_Fast_and_Slow" },
+      { id: 22, title: "Through the Looking-Glass by Lewis Carroll", category: "Fiction", link:"https://en.wikipedia.org/wiki/Through_the_Looking-Glass" },
+      { id: 23, title: "Invisible Man by Ralph Ellison", category: "Classic",link:"https://en.wikipedia.org/wiki/Invisible_Man" },
+      { id: 24, title: "The Black Company by Glen Cook", category: "fantasy", link:"https://en.wikipedia.org/wiki/The_Black_Company" },
+      { id: 25, title: "The Story of My Experiments with Truth by Mahatma Gandhi", category: "Biography", link:"https://en.wikipedia.org/wiki/The_Story_of_My_Experiments_with_Truth" },
+      { id: 26, title: "A Short History of Nearly Everything by Bill Bryso", category: "Non-Fiction", link:"https://en.wikipedia.org/wiki/A_Short_History_of_Nearly_Everything"},
+      { id: 27, title: "The War of the Worlds by H.G. Wells", category: "Fiction", link:"The War of the Worlds by H.G. Wells" },
+      { id: 28, title: "A Tale of Two Cities by Charles Dickens", category: "Classic", link:"https://en.wikipedia.org/wiki/A_Tale_of_Two_Cities" },
+      { id: 29, title: "The Wheel of Time by Robert Jordan", category: "fantasy", link:"https://en.wikipedia.org/wiki/The_Wheel_of_Time" },
+      { id: 30, title: "The Diary of a Young Girl by Anne Frank", category: "Biography", link:"https://en.wikipedia.org/wiki/The_Diary_of_a_Young_Girl" },
+    ];
+
+    const readingList = [];
+
+    function displayBooks(bookList) {
+      const bookGrid = document.getElementById("bookGrid");
+      bookGrid.innerHTML = "";
+      bookList.forEach((book) => {
+        const bookCard = document.createElement("div");
+        bookCard.classList.add("book-card");
+        bookCard.innerHTML = `
+          <h3>${book.title}</h3>
+          <p>Category: ${book.category}</p>
+          <button id="add-${book.id}" onclick="addToReadingList(${book.id})">Add to Reading List</button>
+          <button id="open-${book.id}" onclick="openBook(${book.id})">Open</button>
+        `;
+      
+        bookGrid.appendChild(bookCard);
+
+        // Disable the "Open" button if the book is already in the reading list
+        if (readingList.some(b => b.id === book.id)) {
+          document.getElementById(`open-${book.id}`).disabled = false;
+          document.getElementById(`add-${book.id}`).disabled = true;
+        } else {
+          // If not in the reading list, both buttons are enabled
+          document.getElementById(`open-${book.id}`).disabled = false;
+          document.getElementById(`add-${book.id}`).disabled = false;
+        }
+      });
+    }
+
+    function searchBooks() {
+      const searchQuery = document.getElementById("searchBar").value.toLowerCase();
+      const filteredBooks = books.filter((book) =>
+        book.title.toLowerCase().includes(searchQuery)
+      );
+      displayBooks(filteredBooks);
+    }
+
+    function filterBooks() {
+      const category = document.getElementById("categoryFilter").value;
+      const filteredBooks = category === "All"
+        ? books
+        : books.filter((book) => book.category === category);
+      displayBooks(filteredBooks);
+    }
+
+    function addToReadingList(bookId) {
+      const book = books.find((b) => b.id === bookId);
+      if (!readingList.includes(book)) {
+        readingList.push(book);
+        alert(`${book.title} added to your reading list!`);
+        
+        // Disable Add button and enable Open button
+        document.getElementById(`add-${book.id}`).disabled = true;
+        document.getElementById(`open-${book.id}`).disabled = false;
+      } else {
+        alert(`${book.title} is already in your reading list!`);
+      }
+    }
+
+    function openBook(bookId) {
+      const book = books.find((b) => b.id === bookId);
+      // Open the direct link for the book summary in a new tab
+      window.open(book.link, "_blank");
+
+      // Optionally, you can display a message about the direct link
+      alert(`Opening the direct link for "${book.title}" summary...`);
+    }
+
+    function showReadingList() {
+      const readingListElement = document.getElementById("readingList");
+      const readingListItems = document.getElementById("readingListItems");
+      readingListItems.innerHTML = "";
+      readingList.forEach((book) => {
+        const listItem = document.createElement("li");
+        listItem.textContent = book.title;
+        readingListItems.appendChild(listItem);
+      });
+      readingListElement.classList.remove("hidden");
+    }
+
+    function closeReadingList() {
+      document.getElementById("readingList").classList.add("hidden");
+    }
+
+    // Initial display of all books
+    displayBooks(books);
+  </script>
+</body>
+</html>
